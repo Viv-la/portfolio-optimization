@@ -25,3 +25,18 @@ def calculate_risk_metrics(returns, risk_free_rate=0.02):
         "Sharpe Ratio": sharpe_ratio,
         "VaR 95%": var_95
     })
+from statsmodels.tsa.stattools import adfuller
+
+def run_adf_tests(data):
+    results = []
+
+    for column in data.columns:
+        test = adfuller(data[column].dropna())
+        results.append({
+            "Asset": column,
+            "ADF Statistic": test[0],
+            "p-value": test[1],
+            "Stationary": "Yes" if test[1] < 0.05 else "No"
+        })
+
+    return pd.DataFrame(results)
