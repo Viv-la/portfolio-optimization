@@ -107,3 +107,39 @@ def train_lstm_model(series, split_date="2024-12-31", window_size=60, epochs=10,
     metrics = evaluate_model(test, predictions, model_name="LSTM")
 
     return model, predictions, metrics
+
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+def train_sarima_model(
+    series,
+    order=(1, 1, 1),
+    seasonal_order=(1, 1, 1, 5),
+    split_date="2024-12-31"
+):
+    """
+    Train a SARIMA model using chronological train-test split.
+    The seasonal period is set to 5 to approximate weekly trading-day seasonality.
+    """
+    train = series.loc[:split_date]
+    test = series.loc["2025-01-01":]
+
+    model = SARIMAX(
+        train,
+        order=order,
+        seasonal_order=seasonal_order,
+        enforce_stationarity=False,
+        enforce_invertibility=False
+    )
+
+    fitted_model = model.fit(disp=False)
+
+    forecast = fitted_model.forecast(steps=len(test))
+    forecast.index = test.index
+
+    metrics = evaluate_model(
+        test,
+        forecast,
+        model_name=f"SARIMA{order}x{seasonal_order}"
+    )
+
+    return fitted_model, forecast, metrics
